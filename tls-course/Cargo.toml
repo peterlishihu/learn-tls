@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = [
+    "shared",
+    "lesson01",
+    "lesson02",
+    "lesson03",
+    "lesson04",
+    "lesson05",
+    "lesson06",
+    "lesson07",
+    "lesson08",
+    "lesson09",
+    "lesson10",
+    "lesson11",
+    "lesson12",
+]
+
+[workspace.dependencies]
+# Core rustls dependencies
+rustls = { version = "0.23", default-features = false }
+rustls-aws-lc-rs = "1.0"
+rustls-ring = "0.1"
+rustls-pki-types = "1.0"
+
+# Utilities
+rustls-pemfile = "2.0"
+webpki-roots = "0.26"
+x509-parser = "0.16"
+rcgen = "0.13"
+chrono = "0.4"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+tokio-rustls = "0.26"
+mio = { version = "1.0", features = ["net", "os-poll"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Testing
+hex = "0.4"
+base64 = "0.22"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
