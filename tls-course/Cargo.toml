@@ -17,10 +17,9 @@ members = [
 ]
 
 [workspace.dependencies]
-# Core rustls dependencies
-rustls = { version = "0.23", default-features = false }
-rustls-aws-lc-rs = "1.0"
-rustls-ring = "0.1"
+# Core rustls dependencies - using dev versions available in aliyun mirror
+rustls = { version = "0.24.0-dev.0", default-features = false }
+rustls-ring = "0.1.0-dev.0"
 rustls-pki-types = "1.0"
 
 # Utilities

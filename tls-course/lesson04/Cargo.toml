@@ -1,0 +1,30 @@
+[package]
+name = "lesson04"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "session_resumption"
+path = "src/bin/session_resumption.rs"
+
+[[bin]]
+name = "zerortt_client"
+path = "src/bin/zerortt_client.rs"
+
+[[bin]]
+name = "zerortt_server"
+path = "src/bin/zerortt_server.rs"
+
+[dependencies]
+shared = { path = "../shared" }
+
+rustls = { workspace = true }
+rustls-ring = { workspace = true }
+rustls-pki-types = { workspace = true }
+webpki-roots = { workspace = true }
+
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }

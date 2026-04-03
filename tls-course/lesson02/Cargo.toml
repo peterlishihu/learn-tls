@@ -1,0 +1,36 @@
+[package]
+name = "lesson02"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "client"
+path = "src/bin/client.rs"
+
+[[bin]]
+name = "server"
+path = "src/bin/server.rs"
+
+[[bin]]
+name = "cert_analyzer"
+path = "src/bin/cert_analyzer.rs"
+
+[dependencies]
+shared = { path = "../shared" }
+
+rustls = { workspace = true }
+rustls-ring = { workspace = true }
+rustls-pki-types = { workspace = true }
+rustls-webpki = "0.102"
+webpki-roots = { workspace = true }
+x509-parser = { workspace = true }
+
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }

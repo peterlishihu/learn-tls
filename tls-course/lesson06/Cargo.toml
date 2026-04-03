@@ -1,0 +1,26 @@
+[package]
+name = "lesson06"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "aead_demo"
+path = "src/bin/aead_demo.rs"
+
+[[bin]]
+name = "cipher_benchmark"
+path = "src/bin/cipher_benchmark.rs"
+
+[dependencies]
+shared = { path = "../shared" }
+
+rustls = { workspace = true }
+rustls-ring = { workspace = true }
+
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }

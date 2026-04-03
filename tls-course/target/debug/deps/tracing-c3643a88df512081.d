@@ -1,0 +1,12 @@
+/home/peter/project/learn-tls/tls-course/target/debug/deps/tracing-c3643a88df512081.d: /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/lib.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/macros.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/dispatcher.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/field.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/instrument.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/level_filters.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/span.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/subscriber.rs
+
+/home/peter/project/learn-tls/tls-course/target/debug/deps/libtracing-c3643a88df512081.rmeta: /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/lib.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/macros.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/dispatcher.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/field.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/instrument.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/level_filters.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/span.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/subscriber.rs
+
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/lib.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/macros.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/dispatcher.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/field.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/instrument.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/level_filters.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/span.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/tracing-0.1.44/src/subscriber.rs:

@@ -1,0 +1,23 @@
+[package]
+name = "lesson12"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "debug_tools"
+path = "src/bin/debug_tools.rs"
+
+[[bin]]
+name = "fuzzing_example"
+path = "src/bin/fuzzing_example.rs"
+
+[dependencies]
+shared = { path = "../shared" }
+
+rustls = { workspace = true }
+rustls-ring = { workspace = true }
+
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }

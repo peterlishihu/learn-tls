@@ -1,0 +1,20 @@
+[package]
+name = "lesson03"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "key_exchange_demo"
+path = "src/bin/key_exchange_demo.rs"
+
+[dependencies]
+shared = { path = "../shared" }
+
+rustls = { workspace = true }
+rustls-ring = { workspace = true }
+rustls-pki-types = { workspace = true }
+
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }

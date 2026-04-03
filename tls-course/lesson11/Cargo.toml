@@ -1,0 +1,23 @@
+[package]
+name = "lesson11"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "security_extensions"
+path = "src/bin/security_extensions.rs"
+
+[[bin]]
+name = "ech_client"
+path = "src/bin/ech_client.rs"
+
+[dependencies]
+shared = { path = "../shared" }
+
+rustls = { workspace = true }
+rustls-ring = { workspace = true }
+
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }

@@ -1,0 +1,10 @@
+/home/peter/project/learn-tls/tls-course/target/debug/deps/futures_channel-e5847058da80c7f3.d: /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/lib.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/lock.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/mod.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/queue.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/sink_impl.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/oneshot.rs
+
+/home/peter/project/learn-tls/tls-course/target/debug/deps/libfutures_channel-e5847058da80c7f3.rmeta: /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/lib.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/lock.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/mod.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/queue.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/sink_impl.rs /home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/oneshot.rs
+
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/lib.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/lock.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/mod.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/queue.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/mpsc/sink_impl.rs:
+/home/peter/.cargo/registry/src/mirrors.aliyun.com-0671735e7cc7f5e7/futures-channel-0.3.32/src/oneshot.rs:
