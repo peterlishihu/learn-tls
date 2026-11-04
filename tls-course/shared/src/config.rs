@@ -10,7 +10,7 @@ use rustls::{
     pki_types::{CertificateDer, PrivateKeyDer},
     ClientConfig, RootCertStore, ServerConfig,
 };
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 /// Create a basic client configuration with webpki roots
 pub fn create_basic_client_config() -> ClientConfig {

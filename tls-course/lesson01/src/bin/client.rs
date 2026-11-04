@@ -63,7 +63,7 @@ use anyhow::Result;
 use clap::Parser;
 use rustls::pki_types::ServerName;
 use rustls::{ClientConfig, ClientConnection, RootCertStore};
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 /// Command line arguments for the TLS handshake explorer client
 #[derive(Parser, Debug)]
@@ -133,8 +133,9 @@ fn main() -> Result<()> {
     println!("    → Waiting for ServerHello...");
 
     let start_time = std::time::Instant::now();
-    let mut conn = ClientConnection::new(Arc::new(config), server_name)?;
-    let mut tls = shared::util::TlsStream::new(&mut conn, &mut tcp_stream);
+    let conn = ClientConnection::new(Arc::new(config), server_name)?;
+    let tcp_stream = TcpStream::connect(&addr)?;
+    let mut tls = shared::util::TlsStream::new(conn, tcp_stream);
 
     // Complete handshake by trying to read/write
     tls.flush()?;
@@ -143,7 +144,7 @@ fn main() -> Result<()> {
     println!("    ✓ TLS handshake completed in {:?}", handshake_time);
 
     // Print handshake results
-    print_handshake_results(&conn);
+    print_handshake_results(tls.conn());
 
     // Send application data
     if args.http {
@@ -153,7 +154,7 @@ fn main() -> Result<()> {
     }
 
     if args.analyze {
-        analyze_handshake(&conn);
+        analyze_handshake(tls.conn());
     }
 
     println!("\n[✓] Connection closed successfully");
@@ -198,21 +199,21 @@ fn create_client_config(args: &Args) -> Result<ClientConfig> {
     let config = match args.version.as_str() {
         "tls13" => {
             println!("[Config] Enforcing TLS 1.3 only");
-            ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+            ClientConfig::builder_with_provider(Arc::new(default_provider()))
                 .with_protocol_versions(&[&rustls::version::TLS13])?
                 .with_root_certificates(root_store)
                 .with_no_client_auth()
         }
         "tls12" => {
             println!("[Config] Enforcing TLS 1.2 only");
-            ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+            ClientConfig::builder_with_provider(Arc::new(default_provider()))
                 .with_protocol_versions(&[&rustls::version::TLS12])?
                 .with_root_certificates(root_store)
                 .with_no_client_auth()
         }
         _ => {
             println!("[Config] Auto-negotiating TLS version (1.2 or 1.3)");
-            ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+            ClientConfig::builder_with_provider(Arc::new(default_provider()))
                 .with_safe_default_protocol_versions()
                 .expect("safe defaults")
                 .with_root_certificates(root_store)
@@ -276,7 +277,7 @@ fn create_dangerous_config(_args: &Args) -> Result<ClientConfig> {
         }
     }
 
-    let mut config = ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let mut config = ClientConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults")
         .with_root_certificates(RootCertStore::empty())
@@ -299,7 +300,7 @@ fn print_config_info(config: &ClientConfig, args: &Args) {
     println!("║ Protocol Versions: {:?}", config.alpn_protocols.len());
 
     // Print supported cipher suites
-    let provider = Arc::new(DEFAULT_PROVIDER);
+    let provider = Arc::new(default_provider());
     println!("║ Cipher Suites: {:<42} ║", provider.cipher_suites.len());
     for suite in &provider.cipher_suites {
         println!("║   • {:?}", suite.suite());
@@ -328,7 +329,8 @@ fn print_handshake_results(conn: &ClientConnection) {
 
         // Print additional details
         if let Some(tls13) = suite.tls13() {
-            println!("║ Key Exchange: {:?}", tls13.key_exchange_algorithm());
+            // rustls 0.23: 密钥交换组不直接暴露，改打印握手哈希算法
+            println!("║ Handshake Hash: {:?}", tls13.common.hash_provider.algorithm());
         }
     }
 
@@ -408,16 +410,11 @@ fn analyze_handshake(conn: &ClientConnection) {
     println!("║ Detailed Handshake Analysis                                ║");
     println!("╠════════════════════════════════════════════════════════════╣");
 
-    // Print SNI info if available
-    if let Some(sni) = conn.server_name() {
-        println!("║ SNI (Server Name Indication): {:?}", sni);
-    }
-
     // Print TLS 1.3 specific info
-    if let Some(_secrets) = conn.tls13_secrets() {
-        println!("║ TLS 1.3: Secrets are available");
-        // Note: Access to actual secrets requires special handling
-    }
+    // rustls 不直接暴露会话密钥；需要密钥时通过 SSLKEYLOGFILE(KeyLog) 或
+    // ConnectionCommon::export_keying_material() (RFC 5705) 获取——
+    // lesson13 的 TUIC 演示正是用 exporter 派生认证 token 的。
+    println!("║ Exporter: export_keying_material() available via ConnectionCommon");
 
     // Print certificate info
     if let Some(cert_chain) = conn.peer_certificates() {

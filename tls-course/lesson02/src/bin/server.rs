@@ -15,9 +15,8 @@ use clap::Parser;
 use rustls::{
     pki_types::CertificateDer,
     ServerConfig, ServerConnection,
-    server::{ClientCertVerified, ClientCertVerifier},
 };
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 #[derive(Parser, Debug)]
 #[command(name = "cert_server", about = "Lesson 2: Certificate Verification Server")]
@@ -56,13 +55,70 @@ fn main() -> Result<()> {
 
     println!("✓ Loaded {} server certificate(s)", certs.len());
 
+    /// 接受任意客户端证书的验证器（仅用于教学演示！生产环境必须校验）
+    ///
+    /// rustls 0.23 中 `server::Acceptor` 不是 ClientCertVerifier，
+    /// "要求提供但不校验客户端证书"需要自定义验证器实现。
+    #[derive(Debug)]
+    struct AcceptAnyClientCert;
+
+    impl rustls::server::danger::ClientCertVerifier for AcceptAnyClientCert {
+        fn root_hint_subjects(&self) -> &[rustls::DistinguishedName] {
+            &[]
+        }
+
+        fn verify_client_cert(
+            &self,
+            _end_entity: &CertificateDer<'_>,
+            _intermediates: &[CertificateDer<'_>],
+            _now: rustls::pki_types::UnixTime,
+        ) -> Result<rustls::server::danger::ClientCertVerified, rustls::Error> {
+            println!("⚠️  Client certificate accepted without verification (demo only)");
+            Ok(rustls::server::danger::ClientCertVerified::assertion())
+        }
+
+        fn verify_tls12_signature(
+            &self,
+            message: &[u8],
+            cert: &CertificateDer<'_>,
+            dss: &rustls::DigitallySignedStruct,
+        ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+            rustls::crypto::verify_tls12_signature(
+                message,
+                cert,
+                dss,
+                &rustls::crypto::ring::default_provider().signature_verification_algorithms,
+            )
+        }
+
+        fn verify_tls13_signature(
+            &self,
+            message: &[u8],
+            cert: &CertificateDer<'_>,
+            dss: &rustls::DigitallySignedStruct,
+        ) -> Result<rustls::client::danger::HandshakeSignatureValid, rustls::Error> {
+            rustls::crypto::verify_tls13_signature(
+                message,
+                cert,
+                dss,
+                &rustls::crypto::ring::default_provider().signature_verification_algorithms,
+            )
+        }
+
+        fn supported_verify_schemes(&self) -> Vec<rustls::SignatureScheme> {
+            rustls::crypto::ring::default_provider()
+                .signature_verification_algorithms
+                .supported_schemes()
+        }
+    }
+
     // Build server config
-    let mut config = ServerConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let config_builder = ServerConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults");
 
     // Configure client authentication
-    config = if args.require_client_cert {
+    let config = if args.require_client_cert {
         if let Some(ca_path) = args.ca_cert {
             let ca_certs = shared::load_certs(&ca_path)?;
             let mut roots = rustls::RootCertStore::empty();
@@ -70,20 +126,19 @@ fn main() -> Result<()> {
                 roots.add(cert).unwrap();
             }
             println!("✓ Client certificate verification enabled");
-            config.with_client_cert_verifier(
+            config_builder.with_client_cert_verifier(
                 rustls::server::WebPkiClientVerifier::builder(roots.into())
                     .build()
                     .unwrap(),
             )
         } else {
-            println!("⚠️  No CA cert provided, using self-signed verifier");
-            config.with_client_cert_verifier(rustls::server::Acceptor::default())
+            println!("⚠️  No CA cert provided, accepting any client certificate");
+            config_builder.with_client_cert_verifier(Arc::new(AcceptAnyClientCert))
         }
     } else {
-        config.with_no_client_auth()
-    };
-
-    let config = config.with_single_cert(certs, key)?;
+        config_builder.with_no_client_auth()
+    }
+    .with_single_cert(certs, key)?;
 
     // Listen and accept connections
     let addr = format!("[::]:{}", args.port);

@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::Parser;
 use x509_parser::prelude::*;
+use rustls::crypto::ring::default_provider;
 
 #[derive(Parser, Debug)]
 #[command(name = "cert_analyzer", about = "X.509 Certificate Analyzer")]
@@ -60,14 +61,16 @@ fn fetch_remote_cert(host: &str, port: u16) -> Result<Vec<u8>> {
     root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
 
     let config = rustls::ClientConfig::builder_with_provider(
-        Arc::new(rustls_ring::DEFAULT_PROVIDER),
+        Arc::new(default_provider()),
     )
     .with_safe_default_protocol_versions()
     .expect("safe defaults")
     .with_root_certificates(root_store)
     .with_no_client_auth();
 
-    let server_name: rustls::pki_types::ServerName = host.try_into()?;
+    // ServerName<'static>：从 String 转换，避免借用生命周期问题
+    let server_name: rustls::pki_types::ServerName =
+        rustls::pki_types::ServerName::try_from(host.to_string())?;
     let addr = format!("{}:{}", host, port);
 
     let mut conn = rustls::ClientConnection::new(Arc::new(config), server_name)?;
@@ -187,44 +190,42 @@ fn print_extension(ext: &X509Extension) -> Result<()> {
     println!("\n  [{}] {}", name, oid);
     println!("      Critical: {}", ext.critical);
 
-    if let Ok(parsed) = ext.parsed_extension() {
-        match parsed {
-            ParsedExtension::SubjectAlternativeName(san) => {
-                for gn in &san.general_names {
-                    match gn {
-                        GeneralName::DNSName(dns) => println!("      DNS: {}", dns),
-                        GeneralName::IPAddress(ip) => println!("      IP: {:?}", ip),
-                        GeneralName::RFC822Name(email) => println!("      Email: {}", email),
-                        _ => println!("      {:?}", gn),
-                    }
+    // x509-parser 0.16: parsed_extension() 直接返回 &ParsedExtension（不再是 Result）
+    match ext.parsed_extension() {
+        ParsedExtension::SubjectAlternativeName(san) => {
+            for gn in &san.general_names {
+                match gn {
+                    GeneralName::DNSName(dns) => println!("      DNS: {}", dns),
+                    GeneralName::IPAddress(ip) => println!("      IP: {:?}", ip),
+                    GeneralName::RFC822Name(email) => println!("      Email: {}", email),
+                    _ => println!("      {:?}", gn),
                 }
             }
-            ParsedExtension::BasicConstraints(bc) => {
-                println!("      CA: {}", bc.ca);
-                if let Some(path_len) = bc.path_len_constraint {
-                    println!("      Path Length Constraint: {}", path_len);
-                }
+        }
+        ParsedExtension::BasicConstraints(bc) => {
+            println!("      CA: {}", bc.ca);
+            if let Some(path_len) = bc.path_len_constraint {
+                println!("      Path Length Constraint: {}", path_len);
             }
-            ParsedExtension::KeyUsage(ku) => {
-                println!("      Usage: {:?}", ku);
+        }
+        ParsedExtension::KeyUsage(ku) => {
+            println!("      Usage: {:?}", ku);
+        }
+        // x509-parser 0.16: 常见 EKU 已解析为 bool 字段，其余 OID 在 other 中
+        ParsedExtension::ExtendedKeyUsage(eku) => {
+            if eku.any { println!("      Any"); }
+            if eku.server_auth { println!("      Server Authentication"); }
+            if eku.client_auth { println!("      Client Authentication"); }
+            if eku.code_signing { println!("      Code Signing"); }
+            if eku.email_protection { println!("      Email Protection"); }
+            if eku.time_stamping { println!("      Time Stamping"); }
+            if eku.ocsp_signing { println!("      OCSP Signing"); }
+            for oid in &eku.other {
+                println!("      Other: {}", oid);
             }
-            ParsedExtension::ExtendedKeyUsage(eku) => {
-                for oid in &eku.0 {
-                    let usage = match oid.to_string().as_str() {
-                        "1.3.6.1.5.5.7.3.1" => "Server Authentication",
-                        "1.3.6.1.5.5.7.3.2" => "Client Authentication",
-                        "1.3.6.1.5.5.7.3.3" => "Code Signing",
-                        "1.3.6.1.5.5.7.3.4" => "Email Protection",
-                        "1.3.6.1.5.5.7.3.8" => "Time Stamping",
-                        "1.3.6.1.5.5.7.3.9" => "OCSP Signing",
-                        _ => &oid.to_string(),
-                    };
-                    println!("      {}", usage);
-                }
-            }
-            _ => {
-                println!("      Raw data: {} bytes", ext.value.len());
-            }
+        }
+        _ => {
+            println!("      Raw data: {} bytes", ext.value.len());
         }
     }
 

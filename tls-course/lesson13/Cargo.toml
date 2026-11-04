@@ -1,0 +1,33 @@
+[package]
+name = "lesson13"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "quic_echo"
+path = "src/bin/quic_echo.rs"
+
+[[bin]]
+name = "quic_vs_tls"
+path = "src/bin/quic_vs_tls.rs"
+
+[[bin]]
+name = "tuic_demo"
+path = "src/bin/tuic_demo.rs"
+
+[dependencies]
+shared = { path = "../shared" }
+
+rustls = { workspace = true }
+rustls-pki-types = { workspace = true }
+quinn = { workspace = true }
+bytes = { workspace = true }
+rcgen = { workspace = true }
+thiserror = { workspace = true }
+
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }
+tokio-rustls = { workspace = true }

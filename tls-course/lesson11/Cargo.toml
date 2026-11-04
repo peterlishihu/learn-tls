@@ -15,7 +15,6 @@ path = "src/bin/ech_client.rs"
 shared = { path = "../shared" }
 
 rustls = { workspace = true }
-rustls-ring = { workspace = true }
 
 anyhow = { workspace = true }
 tracing = { workspace = true }

@@ -63,7 +63,7 @@ fn explain_architecture() {
     println!("4. Crypto Abstraction Layer");
     println!("   - crypto::CryptoProvider: Pluggable crypto");
     println!("   - rustls-aws-lc-rs: AWS libcrypto provider");
-    println!("   - rustls-ring: Ring crypto provider\n");
+    println!("   - rustls::crypto::ring: Ring crypto provider\n");
 
     println!("=== Design Principles ===\n");
 

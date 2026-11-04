@@ -19,7 +19,6 @@ path = "src/bin/mio_server.rs"
 shared = { path = "../shared" }
 
 rustls = { workspace = true }
-rustls-ring = { workspace = true }
 
 anyhow = { workspace = true }
 tracing = { workspace = true }
@@ -27,5 +26,6 @@ tracing-subscriber = { workspace = true }
 clap = { workspace = true }
 tokio = { workspace = true }
 tokio-rustls = { workspace = true }
+webpki-roots = { workspace = true }
 mio = { workspace = true }
 futures = "0.3"

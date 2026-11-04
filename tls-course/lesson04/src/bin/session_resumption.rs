@@ -65,13 +65,13 @@ fn compare_mechanisms() {
 
     println!("TLS 1.3 Full Handshake:      1 RTT");
     println!("  ClientHello + KeyShare");
-    println!("  ServerHello + {EncryptedExtensions} + {Certificate} + {Finished}");
-    println!("  {Finished}");
+    println!("  ServerHello + {{EncryptedExtensions}} + {{Certificate}} + {{Finished}}");
+    println!("  {{Finished}}");
     println!("  Application Data\n");
 
     println!("TLS 1.3 0-RTT:               0 RTT");
-    println!("  ClientHello + PSK + KeyShare + {early_data}");
-    println!("  ServerHello + {Finished} + {application_data}");
+    println!("  ClientHello + PSK + KeyShare + {{early_data}}");
+    println!("  ServerHello + {{Finished}} + {{application_data}}");
 }
 
 fn print_all_info() {
@@ -125,9 +125,9 @@ fn print_all_info() {
 
     println!("0-RTT Mode:");
     println!("  1. Same as PSK setup");
-    println!("  2. Later: ClientHello + PSK + KeyShare + {early_data}");
+    println!("  2. Later: ClientHello + PSK + KeyShare + {{early_data}}");
     println!("  3. Client sends application data immediately!");
-    println!("  4. ServerHello + {Finished} + {response}");
+    println!("  4. ServerHello + {{Finished}} + {{response}}");
     println!("  5. No additional round trip!\n");
 
     println!("⚠️  0-RTT Security Considerations:");

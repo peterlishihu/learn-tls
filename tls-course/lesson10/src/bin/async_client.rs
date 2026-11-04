@@ -9,7 +9,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use rustls::{ClientConfig, RootCertStore};
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_rustls::TlsConnector;
@@ -48,7 +48,7 @@ async fn main() -> Result<()> {
         root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     }
 
-    let config = ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let config = ClientConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults")
         .with_root_certificates(root_store)

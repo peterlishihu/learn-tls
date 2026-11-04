@@ -14,13 +14,20 @@ members = [
     "lesson10",
     "lesson11",
     "lesson12",
+    "lesson13",
 ]
 
 [workspace.dependencies]
-# Core rustls dependencies - using dev versions available in aliyun mirror
-rustls = { version = "0.24.0-dev.0", default-features = false }
-rustls-ring = "0.1.0-dev.0"
+# Core rustls dependencies
+# 统一使用 rustls 0.23 系列（ring provider，无 aws-lc 依赖，编译更快）：
+# - 课程代码按 0.23 API 编写
+# - quinn (lesson13) 与 tokio-rustls 同样依赖 rustls 0.23，全仓库单版本
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 rustls-pki-types = "1.0"
+
+# QUIC (lesson13): quinn 的 TLS 引擎正是 rustls
+quinn = "0.11"
+bytes = "1"
 
 # Utilities
 rustls-pemfile = "2.0"

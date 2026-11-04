@@ -19,8 +19,8 @@ path = "src/bin/cert_analyzer.rs"
 shared = { path = "../shared" }
 
 rustls = { workspace = true }
-rustls-ring = { workspace = true }
 rustls-pki-types = { workspace = true }
+rustls-pemfile = { workspace = true }
 rustls-webpki = "0.102"
 webpki-roots = { workspace = true }
 x509-parser = { workspace = true }

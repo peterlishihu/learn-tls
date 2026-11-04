@@ -10,7 +10,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use rustls::{ClientConfig, ClientConnection, RootCertStore};
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 #[derive(Parser, Debug)]
 #[command(name = "zerortt_client", about = "0-RTT Client Demo")]
@@ -48,7 +48,7 @@ fn main() -> Result<()> {
         root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     }
 
-    let config = ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let config = ClientConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults")
         .with_root_certificates(root_store)
@@ -60,18 +60,18 @@ fn main() -> Result<()> {
     println!("Connecting to {}...", addr);
     println!("Sending 0-RTT data: {}\n", args.early_data);
 
-    let mut conn = ClientConnection::new(Arc::new(config), server_name)?;
-    let mut tcp = TcpStream::connect(&addr)?;
+    let conn = ClientConnection::new(Arc::new(config), server_name)?;
+    let tcp = TcpStream::connect(&addr)?;
 
     // Complete handshake and send 0-RTT data
     // Note: Full 0-RTT requires PSK from previous session
     // This demo shows the concept
 
-    let mut stream = shared::util::Stream::new(&mut conn, &mut tcp);
+    let mut stream = shared::util::Stream::new(conn, tcp);
     stream.flush()?;
 
     println!("✓ Handshake complete");
-    println!("Negotiated: {:?}", conn.protocol_version());
+    println!("Negotiated: {:?}", stream.conn().protocol_version());
 
     // Send application data
     stream.write_all(args.early_data.as_bytes())?;

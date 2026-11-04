@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 #[derive(Parser, Debug)]
 #[command(name = "key_exchange_demo", about = "Lesson 3: Key Exchange Mechanisms")]
@@ -50,11 +50,12 @@ fn main() -> Result<()> {
 fn list_key_exchange_groups() {
     println!("\n=== Supported Key Exchange Groups ===\n");
 
-    let provider = Arc::new(DEFAULT_PROVIDER);
+    let provider = Arc::new(default_provider());
 
-    println!("TLS 1.3 Key Exchange Groups:");
-    if let Some(kx) = provider.key_exchange {
-        println!("  Available: {:?}", kx);
+    println!("TLS 1.3 Key Exchange Groups (default provider):");
+    for group in provider.kx_groups.iter() {
+        // SupportedKxGroup::name() 返回 NamedGroup 枚举
+        println!("  {:?}", group.name());
     }
 
     println!("\nCommon Groups:");

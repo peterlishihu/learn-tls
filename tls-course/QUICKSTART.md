@@ -156,6 +156,27 @@ cargo run --bin debug_tools -- --explain
 cargo run --bin fuzzing_example -- --explain
 ```
 
+### 课时13: QUIC 与 TUIC
+
+```bash
+cd lesson13
+
+# QUIC 基础：ALPN、多路复用、0-RTT 恢复
+cargo run --bin quic_echo
+
+# TCP+TLS vs QUIC 实测对比
+cargo run --bin quic_vs_tls
+
+# mini-TUIC：五个命令全流程（exporter 认证、TCP/UDP 中继、错误信令）
+cargo run --bin tuic_demo
+
+# 协议帧编解码单元测试
+cargo test
+```
+
+QUIC 流量同样支持 Wireshark 解密（SSLKEYLOGFILE），配合 `quic` 显示过滤器观察
+CRYPTO 帧里的 ClientHello 与 1-RTT 后的 STREAM/DATAGRAM 帧。
+
 ## 学习路径建议
 
 ### 第一周: 基础 (课时1-4)
@@ -174,10 +195,10 @@ cargo run --bin fuzzing_example -- --explain
 - 理解架构设计
 - 实现自定义组件
 
-### 第四周: 高级与实战 (课时11-12)
+### 第四周: 高级与实战 (课时11-13)
 - 学习安全扩展
 - 掌握调试技巧
-- 准备贡献代码
+- QUIC 与 TUIC：把 rustls 知识迁移到 QUIC，理解 0-RTT 代理协议
 
 ## 常见问题
 

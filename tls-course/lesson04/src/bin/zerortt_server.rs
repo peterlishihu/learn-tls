@@ -10,7 +10,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use rustls::{ServerConfig, ServerConnection};
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 #[derive(Parser, Debug)]
 #[command(name = "zerortt_server", about = "0-RTT Server Demo")]
@@ -37,7 +37,7 @@ fn main() -> Result<()> {
     let certs = shared::load_certs(&args.cert)?;
     let key = shared::load_private_key(&args.key)?;
 
-    let config = ServerConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let config = ServerConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults")
         .with_no_client_auth()
@@ -67,7 +67,9 @@ fn main() -> Result<()> {
         println!("  Protocol: {:?}", conn.protocol_version());
 
         // Handle 0-RTT data if present
-        if conn.is_early_data_accepted() {
+        // rustls 0.23：ServerConnection 没有 is_early_data_accepted()，
+        // 通过 early_data() 是否返回 Some 判断 0-RTT 是否被接受
+        if conn.early_data().is_some() {
             println!("  ✓ 0-RTT data accepted");
         }
 

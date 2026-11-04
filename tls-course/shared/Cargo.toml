@@ -5,8 +5,7 @@ edition = "2021"
 
 [dependencies]
 # Core dependencies
-rustls = { workspace = true, features = ["std", "webpki"] }
-rustls-ring = { workspace = true }
+rustls = { workspace = true }
 rustls-pki-types = { workspace = true }
 rustls-pemfile = { workspace = true }
 

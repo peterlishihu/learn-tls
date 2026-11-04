@@ -20,7 +20,7 @@ use rustls::{
     client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier},
     DigitallySignedStruct, Error, SignatureScheme,
 };
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 #[derive(Parser, Debug)]
 #[command(name = "cert_client", about = "Lesson 2: Certificate Verification Client")]
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
     let config = if args.custom_verifier {
         create_config_with_custom_verifier(root_store, args.skip_hostname)?
     } else {
-        create_standard_config(root_store, &args)?
+        create_standard_config(&args, root_store)?
     };
 
     // Connect to server
@@ -86,21 +86,21 @@ fn main() -> Result<()> {
     println!("\nConnecting to {}...", addr);
 
     let server_name: ServerName = args.host.clone().try_into()?;
-    let mut conn = ClientConnection::new(Arc::new(config), server_name)?;
-    let mut tcp = TcpStream::connect(&addr)?;
+    let conn = ClientConnection::new(Arc::new(config), server_name)?;
+    let tcp = TcpStream::connect(&addr)?;
 
     // Complete handshake
     println!("Performing TLS handshake...");
-    let mut stream = shared::util::Stream::new(&mut conn, &mut tcp);
+    let mut stream = shared::util::Stream::new(conn, tcp);
     stream.flush()?;
 
     println!("✓ TLS handshake completed\n");
 
     // Print connection info
-    if let Some(suite) = conn.negotiated_cipher_suite() {
+    if let Some(suite) = stream.conn().negotiated_cipher_suite() {
         println!("Cipher Suite: {:?}", suite.suite());
     }
-    if let Some(version) = conn.protocol_version() {
+    if let Some(version) = stream.conn().protocol_version() {
         println!("Protocol: {:?}", version);
     }
 
@@ -114,7 +114,7 @@ fn main() -> Result<()> {
 }
 
 fn create_standard_config(args: &Args, root_store: RootCertStore) -> Result<ClientConfig> {
-    let builder = ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let builder = ClientConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults")
         .with_root_certificates(root_store);
@@ -164,25 +164,25 @@ impl ServerCertVerifier for LoggingVerifier {
             if now_unix < not_before {
                 println!("⚠️  Certificate not yet valid!");
                 return Err(Error::InvalidCertificate(
-                    rustls::InvalidCertificateError::NotValidYet,
+                    rustls::CertificateError::NotValidYet,
                 ));
             }
             if now_unix > not_after {
                 println!("⚠️  Certificate expired!");
                 return Err(Error::InvalidCertificate(
-                    rustls::InvalidCertificateError::Expired,
+                    rustls::CertificateError::Expired,
                 ));
             }
             println!("✓ Certificate validity check passed");
 
             // Print SANs
-            for ext in &cert.extensions() {
-                if let Ok(san) = ext.parsed_extension() {
-                    if let x509_parser::extensions::ParsedExtension::SubjectAlternativeName(sans) = san {
-                        println!("Subject Alternative Names:");
-                        for san in &sans.general_names {
-                            println!("  - {:?}", san);
-                        }
+            for ext in cert.extensions() {
+                if let x509_parser::extensions::ParsedExtension::SubjectAlternativeName(sans) =
+                    ext.parsed_extension()
+                {
+                    println!("Subject Alternative Names:");
+                    for san in &sans.general_names {
+                        println!("  - {:?}", san);
                     }
                 }
             }
@@ -228,7 +228,7 @@ fn create_config_with_custom_verifier(
     root_store: RootCertStore,
     _skip_hostname: bool,
 ) -> Result<ClientConfig> {
-    let mut config = ClientConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let mut config = ClientConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults")
         .with_root_certificates(root_store)

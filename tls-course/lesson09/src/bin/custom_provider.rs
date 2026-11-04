@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 #[derive(Parser, Debug)]
 #[command(name = "custom_provider", about = "Lesson 9: Crypto Provider")]
@@ -46,7 +46,7 @@ fn explain_provider() {
     println!("CryptoProvider defines the cryptographic operations for rustls:");
     println!("\npub struct CryptoProvider {{");
     println!("    pub cipher_suites: Vec<SupportedCipherSuite>,");
-    println!("    pub kx_groups: Vec<SupportedKxGroup>,");
+    println!("    pub kx_groups: &[&'static dyn SupportedKxGroup],");
     println!("    pub signature_verification_algorithms: SignatureVerificationAlgorithms,");
     println!("    pub secure_random: Arc<dyn SecureRandom>,");
     println!("    pub key_provider: Arc<dyn KeyProvider>,");
@@ -88,7 +88,7 @@ fn explain_provider() {
 }
 
 fn list_algorithms() {
-    let provider = Arc::new(DEFAULT_PROVIDER);
+    let provider = Arc::new(default_provider());
 
     println!("\n=== Available Cipher Suites ===\n");
 
@@ -96,11 +96,13 @@ fn list_algorithms() {
         let s = suite.suite();
         println!("{}. {:?}", i + 1, s);
 
-        if let Some(tls13) = s.tls13() {
-            println!("   TLS 1.3: {:?}", tls13);
+        // SupportedCipherSuite::tls13() 返回 Option<&Tls13CipherSuite>
+        if let Some(tls13) = suite.tls13() {
+            println!("   TLS 1.3 (hash: {:?})", tls13.common.hash_provider.algorithm());
         }
-        if let Some(tls12) = s.tls12() {
-            println!("   TLS 1.2: {:?}", tls12);
+        // rustls 0.23 没有 tls12() 访问器，直接模式匹配枚举
+        if let rustls::SupportedCipherSuite::Tls12(tls12) = suite {
+            println!("   TLS 1.2 (hash: {:?})", tls12.common.hash_provider.algorithm());
         }
         println!();
     }

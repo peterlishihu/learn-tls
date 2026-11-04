@@ -15,7 +15,6 @@ path = "src/bin/fuzzing_example.rs"
 shared = { path = "../shared" }
 
 rustls = { workspace = true }
-rustls-ring = { workspace = true }
 
 anyhow = { workspace = true }
 tracing = { workspace = true }

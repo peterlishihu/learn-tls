@@ -19,7 +19,6 @@ path = "src/bin/zerortt_server.rs"
 shared = { path = "../shared" }
 
 rustls = { workspace = true }
-rustls-ring = { workspace = true }
 rustls-pki-types = { workspace = true }
 webpki-roots = { workspace = true }
 

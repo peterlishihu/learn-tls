@@ -13,7 +13,7 @@ use clap::Parser;
 use mio::net::{TcpListener, TcpStream};
 use mio::{Events, Interest, Poll, Token};
 use rustls::{ServerConfig, ServerConnection};
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 const SERVER: Token = Token(0);
 
@@ -49,7 +49,7 @@ fn main() -> Result<()> {
     let certs = shared::load_certs(&args.cert)?;
     let key = shared::load_private_key(&args.key)?;
 
-    let config = ServerConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+    let config = ServerConfig::builder_with_provider(Arc::new(default_provider()))
         .with_safe_default_protocol_versions()
         .expect("safe defaults")
         .with_no_client_auth()

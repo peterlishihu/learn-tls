@@ -1,0 +1,18 @@
+# Rust
+tls-course/target/
+**/target/
+Cargo.lock.orig
+
+# 运行时生成的证书与密钥
+tls-course/certs/
+certs/
+
+# 日志与密钥导出（Wireshark 解密用，绝不入库）
+*.log
+SSLKEYLOGFILE*
+tls-keys.log
+
+# IDE
+.idea/
+.vscode/
+*.swp

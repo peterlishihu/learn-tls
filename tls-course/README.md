@@ -10,6 +10,7 @@
 | **记录层** | 5-7 | 记录协议、加密机制、密钥派生 | ⭐⭐⭐ |
 | **架构** | 8-10 | rustls架构、Crypto Provider、异步I/O | ⭐⭐⭐⭐ |
 | **高级** | 11-12 | 安全扩展、调试与贡献 | ⭐⭐⭐⭐⭐ |
+| **实战** | 13 | QUIC 与 TUIC：0-RTT 代理协议 | ⭐⭐⭐⭐⭐ |
 
 ## 快速开始
 
@@ -108,6 +109,15 @@ cargo run --bin server --example simple_server
 - rustls贡献流程
 - 实践：提交PR
 
+### 第五阶段：QUIC 与实战协议
+
+#### [课时13：QUIC 与 TUIC](./lesson13/README.md)
+- QUIC 与 TLS 1.3 的关系（握手就是 rustls，记录层换成包保护）
+- 流 / DATAGRAM / 连接 ID / 0-RTT 四大机制
+- TUIC 解决了什么：TCP-over-TCP 崩溃、UDP Full-cone、证书成本
+- TUIC 魔改了什么：exporter 认证、DATAGRAM 中继、无应答协议
+- 实践：用 quinn 实现 mini-TUIC（五个命令全流程）
+
 ## 项目结构
 
 ```
@@ -127,7 +137,7 @@ tls-course/
 ├── docs/                    # 补充文档
 │   ├── tls_cheatsheet.md   # TLS速查表
 │   └── rustls_notes.md     # rustls源码笔记
-└── lesson{01..12}/        # 各课时代码
+└── lesson{01..13}/       # 各课时代码
     ├── Cargo.toml
     ├── README.md           # 课时说明
     ├── src/
@@ -174,8 +184,13 @@ RUST_LOG=debug cargo run --bin client
 
 - [RFC 8446 - TLS 1.3](https://tools.ietf.org/html/rfc8446)
 - [RFC 5246 - TLS 1.2](https://tools.ietf.org/html/rfc5246)
+- [RFC 9000 - QUIC 传输协议](https://www.rfc-editor.org/rfc/rfc9000)（课时 13）
+- [RFC 9001 - 用 TLS 保护 QUIC](https://www.rfc-editor.org/rfc/rfc9001)（课时 13）
+- [RFC 9221 - QUIC 不可靠数据报扩展](https://www.rfc-editor.org/rfc/rfc9221)（课时 13）
+- [TUIC 协议规范](https://github.com/tuic-protocol/tuic/blob/master/SPEC.md)（课时 13）
 - [rustls文档](https://docs.rs/rustls/)
 - [rustls GitHub](https://github.com/rustls/rustls)
+- [quinn 文档](https://docs.rs/quinn)（课时 13，Rust QUIC 实现）
 - [TLS Illustrated](https://tls12.xargs.org/) (可视化TLS 1.2)
 - [TLS 1.3 Illustrated](https://tls13.xargs.org/) (可视化TLS 1.3)
 

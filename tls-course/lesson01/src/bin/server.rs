@@ -52,7 +52,7 @@ use anyhow::Result;
 use clap::Parser;
 use rustls::pki_types::CertificateDer;
 use rustls::{ServerConfig, ServerConnection};
-use rustls_ring::DEFAULT_PROVIDER;
+use rustls::crypto::ring::default_provider;
 
 /// Command line arguments for the TLS handshake explorer server
 #[derive(Parser, Debug)]
@@ -171,13 +171,7 @@ fn main() -> Result<()> {
 
 /// Load certificates from PEM file
 fn load_certificates(path: &PathBuf) -> Result<Vec<CertificateDer<'static>>> {
-    let certfile = std::fs::File::open(path)?;
-    let mut reader = std::io::BufReader::new(certfile);
-
-    let certs: Vec<CertificateDer<'static>> =
-        rustls_pemfile::certs(&mut reader)
-            .filter_map(|cert| cert.ok())
-            .collect();
+    let certs = shared::load_certs(path)?;
 
     if certs.is_empty() {
         anyhow::bail!("No certificates found in file");
@@ -188,27 +182,7 @@ fn load_certificates(path: &PathBuf) -> Result<Vec<CertificateDer<'static>>> {
 
 /// Load private key from PEM file
 fn load_private_key(path: &PathBuf) -> Result<rustls::pki_types::PrivateKeyDer<'static>> {
-    let keyfile = std::fs::File::open(path)?;
-    let mut reader = std::io::BufReader::new(keyfile);
-
-    // Try PKCS#8 first
-    if let Some(key) = rustls_pemfile::pkcs8_private_keys(&mut reader)
-        .filter_map(|key| key.ok())
-        .next()
-    {
-        return Ok(rustls::pki_types::PrivateKeyDer::try_from(key)?);
-    }
-
-    // Reset reader and try RSA
-    reader.rewind()?;
-    if let Some(key) = rustls_pemfile::rsa_private_keys(&mut reader)
-        .filter_map(|key| key.ok())
-        .next()
-    {
-        return Ok(rustls::pki_types::PrivateKeyDer::try_from(key)?);
-    }
-
-    anyhow::bail!("No private key found in file")
+    shared::load_private_key(path)
 }
 
 /// Create server configuration based on arguments
@@ -220,21 +194,21 @@ fn create_server_config(
     let config = match args.version.as_str() {
         "tls13" => {
             println!("[Config] Enforcing TLS 1.3 only");
-            ServerConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+            ServerConfig::builder_with_provider(Arc::new(default_provider()))
                 .with_protocol_versions(&[&rustls::version::TLS13])?
                 .with_no_client_auth()
                 .with_single_cert(certs, key)?
         }
         "tls12" => {
             println!("[Config] Enforcing TLS 1.2 only");
-            ServerConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+            ServerConfig::builder_with_provider(Arc::new(default_provider()))
                 .with_protocol_versions(&[&rustls::version::TLS12])?
                 .with_no_client_auth()
                 .with_single_cert(certs, key)?
         }
         _ => {
             println!("[Config] Auto-negotiating TLS version (1.2 or 1.3)");
-            ServerConfig::builder_with_provider(Arc::new(DEFAULT_PROVIDER))
+            ServerConfig::builder_with_provider(Arc::new(default_provider()))
                 .with_safe_default_protocol_versions()
                 .expect("safe defaults")
                 .with_no_client_auth()
@@ -322,7 +296,8 @@ fn print_handshake_results(conn: &ServerConnection) {
         println!("║ Cipher Suite: {:?}", suite.suite());
 
         if let Some(tls13) = suite.tls13() {
-            println!("║ Key Exchange: {:?}", tls13.key_exchange_algorithm());
+            // rustls 0.23: 密钥交换组不直接暴露，改打印握手哈希算法
+            println!("║ Handshake Hash: {:?}", tls13.common.hash_provider.algorithm());
         }
     }
 
@@ -411,7 +386,11 @@ fn analyze_handshake(conn: &ServerConnection) {
 
     if let Some(suite) = conn.negotiated_cipher_suite() {
         println!("║ Negotiated Cipher: {:?}", suite.suite());
-        println!("║ Suite Strength: {:?} bit", suite.algorithm_key_len());
+        let hash = match suite {
+            rustls::SupportedCipherSuite::Tls13(s) => s.common.hash_provider.algorithm(),
+            rustls::SupportedCipherSuite::Tls12(s) => s.common.hash_provider.algorithm(),
+        };
+        println!("║ Suite Hash: {:?}", hash);
     }
 
     // Print client certificate info if available
