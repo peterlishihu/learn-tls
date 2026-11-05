@@ -170,6 +170,21 @@ Rust 系用的 QUIC 库正是 quinn——**也就是本课时用的这套 quinn 
 > 其次是自签证书的稳定指纹、DATAGRAM 的流量统计形态（小包/突发/无重传）。
 > 实践中 TUIC 常配 `obfs`（如 sing-box 的 salamander，对 QUIC 包整体加
 > 伪随机混淆层），对付的正是 Initial/ALPN 指纹，而非帧本身。
+>
+> **为什么不把 ALPN 伪装成 h3、假装自己是 HTTP/3？** 因为 TUIC 的设计
+> 目标是**性能与功能**（0-RTT、Full-cone UDP），不是**不可区分性**——
+> 官方 Motivation 里没有"抗识别"这一条。伪装 h3 也骗不过行为分析
+> （DATAGRAM 突发小包 ≠ HTTP/3 的请求-响应节奏）。在代理生态里这是
+> 明确的分工：
+>
+> | 层次/路线 | 负责的问题 | 例子 |
+> |-----------|-----------|------|
+> | TUIC 协议层 | 性能、功能、密码学安全 | 0-RTT、Full-cone、exporter 认证 |
+> | 部署层混淆 | 不可识别 | obfs（salamander）、CDN 中转、端口跳跃 |
+> | REALITY 系路线 | 抗主动探测 | 借真实第三方站点的证书/SNI 握手，探测时回落到真实站 |
+>
+> 选型：要 UDP/低延迟 → TUIC（+obfs）；环境赶尽杀绝未知协议 → REALITY 系。
+> "隐藏"是正交问题，TUIC 把它留给部署层。
 
 ### 2.3 TUIC v5 命令一览（wire format）
 

@@ -67,6 +67,14 @@ cargo run --bin hkdf_demo -- --key-tree
      - Extract：把高熵但可能分布偏斜的输入均匀化成固定长度的 pseudorandom key
      - Expand：从 PRK 分层展开，`HKDF-Expand-Label(secret, "c ap traffic", hash)` 
        用结构化标签保证不同用途得到不同密钥
+   - "分布偏斜的输入"具体指什么？就是课时 3 的 ECDH 输出——X25519 的
+     共享秘密是群元素（u 坐标），最高位恒为 0、取值受曲线约束，
+     不是均匀随机的 32 字节串，直接当对称密钥破坏可证明安全性；
+     HKDF-Extract 专治这个。派生时掺入握手摘要（transcript hash），
+     还让密钥绑定握手历史——中间人篡改任何消息，双方密钥即分叉
+   - 这是全行业的标准姿势：WireGuard 把每轮 DH 输出都 Extract 进
+     chaining key，Signal/Noise 同理——DH 输出只是原材料，KDF 层
+     把它加工成合格且分用途的密钥
    - HKDF 有 NIST SP 800-56C 背书和成熟的安全性分析；
      TLS 1.3 的密钥调度树（本课的 key_tree）正是把 HKDF 当乐高：
      每层 Extract 的 salt 都是上一层的输出再 Expand("derived")——链式绑定握手进度
