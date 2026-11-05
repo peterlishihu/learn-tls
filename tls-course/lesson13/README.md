@@ -157,6 +157,20 @@ Rust 系用的 QUIC 库正是 quinn——**也就是本课时用的这套 quinn 
 （`export_keying_material`、DATAGRAM、流 reset、自定义拥塞控制器），
 这些在"拿 QUIC 当 HTTP/3 用"的库里都是冷门路径。
 
+> **指纹辨析：这些"魔改"用法会被审查者看到吗？**
+>
+> 看不到帧这个层面。TUIC 的全部业务帧（含 DATAGRAM）都在 **1-RTT 包**的
+> 密文载荷里，中间路由只看得到 IP/UDP 头和少量 QUIC 包头字段（连接 ID、
+> 首字节），连包号都被 header protection 加密——"用 DATAGRAM 跑 UDP 中继"
+> 这个行为不构成线上特征。
+>
+> TUIC 真正的暴露面在 **Initial 包**：它用公开密钥加密（见思考题 6），
+> 任何人可解密，里面的 ClientHello 携带**明文 SNI + 自定义 ALPN**——
+> 扫一眼 ALPN 就能识别 TUIC（ECH 能藏 SNI，但藏不了自定义 ALPN）。
+> 其次是自签证书的稳定指纹、DATAGRAM 的流量统计形态（小包/突发/无重传）。
+> 实践中 TUIC 常配 `obfs`（如 sing-box 的 salamander，对 QUIC 包整体加
+> 伪随机混淆层），对付的正是 Initial/ALPN 指纹，而非帧本身。
+
 ### 2.3 TUIC v5 命令一览（wire format）
 
 ```text
@@ -206,14 +220,26 @@ ADDR = TYPE(1) + ADDR(变长) + PORT(2)
    - token = `exporter(label=UUID, context=password)`，而 exporter 的底层是
      **本连接握手派生的 exporter_master_secret**（课时 7 密钥树的一支）——
      每条连接的握手 transcript 不同，导出值必然不同
-   - 重放场景：攻击者录下连接 A 的 token，在连接 B 上原样发送——
-     服务器用**连接 B 自己的** exporter 复算，值不匹配，认证失败。
-     token 与连接绑定，不是跨连接的万能钥匙
+   - "重放无效"的完整威胁模型：被动抓包者其实连 token 明文都拿不到
+     （token 走在加密流里）；考虑更强的攻击者——通过日志/内存 dump/配置
+     泄露拿到**明文 token**，想在自己发起的新连接上冒充。关键在于服务器
+     **不是校验 token 内容，而是当场用本连接的密钥重算**：
+     ```
+     客户端（连接 A）：token_A = exporter(连接A密钥, UUID, password)
+     攻击者（连接 B）：提交 token_A
+     服务器（连接 B）：expect_B = exporter(连接B密钥, UUID, 真实password)
+                      expect_B ≠ token_A → 失败
+     ```
+     token 是"密码 × 本连接密钥"的函数，**连接一换就作废**——这就是
+     "重放到别的连接毫无意义"。对比静态方案 SHA256(password)：泄露一次
+     即永久有效、任何连接可用
    - 只知 UUID 不知密码：exporter 是 PRF（HKDF 展开），没有正确的 context 输入
      无法计算输出，求逆在计算上不可行——不能伪造
    - 唯一的攻击面是密码本身（弱密码可离线暴力尝试 exporter 组合），
      所以 TUIC 文档强调用强密码；这也是 v4→v5 的关键改进：
-     v4 的 challenge 应答需要一次往返，v5 用 exporter 做到 0-RTT 认证
+     v4 的 challenge 应答（服务器发 nonce、客户端回 HMAC）需要一次往返，
+     v5 用 exporter 把"新鲜性"外包给 TLS 握手本身（每连接密钥天然不同），
+     零往返拿到同样的防重放性质
    </details>
 
 2. **TCP-over-TCP 为什么会 meltdown？画出内层 TCP 重传定时器与外层拥塞窗口互相恶化的循环。**
@@ -310,6 +336,10 @@ ADDR = TYPE(1) + ADDR(变长) + PORT(2)
 
    - 后续包（1-RTT）才用双方握手的真密钥——Wireshark 要解它们就必须导入
      SSLKEYLOGFILE（课时 12 的方法对 QUIC 同样有效）
+   - 引申（与 2.2 节"指纹辨析"呼应）：Initial 可被任何人解密意味着
+     **ClientHello 里的 SNI 和 ALPN 对审查者明牌**——自定义 ALPN 是 TUIC
+     最显著的识别特征（ECH 能藏 SNI、藏不了 ALPN），
+     生产环境靠 obfs 混淆层（sing-box 的 salamander 等）对抗
    </details>
 
 ## 延伸阅读
