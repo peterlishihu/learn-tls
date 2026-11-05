@@ -228,6 +228,18 @@ Rust 系用的 QUIC 库正是 quinn——**也就是本课时用的这套 quinn 
 >
 > 选型：要 UDP/低延迟 → TUIC（+obfs）；环境赶尽杀绝未知协议 → REALITY 系。
 > "隐藏"是正交问题，TUIC 把它留给部署层。
+>
+> **REALITY 能叠加在 TUIC 上吗？——不能。** Xray 官方文档原话
+> "REALITY only modifies TLS"：它的三根支柱（劫持 TCP+TLS 握手、伪造
+> 借来的真实站证书、认证失败时 TCP 透明回落转发）在 QUIC 上全部无处
+> 着力——TUIC 的握手在 UDP 的 Initial/CRYPTO 帧里，没有可供劫持的
+> TCP TLS 握手。实践中的关系是**分流并存**（sing-box/mihomo 同时配
+> VLESS+REALITY 出站走 TCP 流量、TUIC 出站走 UDP，路由规则分流），
+> 而非套娃——QUIC-in-TCP 会让 0-RTT、流独立性、UDP 拥塞控制全部
+> 失效，还重新引入 TCP-over-TCP meltdown，自相矛盾。若要在 QUIC
+> 世界里追求"不像代理"，正路是 **MASQUE**（RFC 9298/9484）：用标准
+> HTTP/3 的 CONNECT-UDP 做代理，ALPN/握手就是真实 h3——不伪装，
+> 而是真的就是标准协议。
 
 ### 2.3 TUIC v5 命令一览（wire format）
 
@@ -405,6 +417,7 @@ ADDR = TYPE(1) + ADDR(变长) + PORT(2)
 - [RFC 9000 — QUIC: A UDP-Based Multiplexed and Secure Transport](https://www.rfc-editor.org/rfc/rfc9000)
 - [RFC 9001 — Using TLS to Secure QUIC](https://www.rfc-editor.org/rfc/rfc9001)（看 §5.2 Initial 密钥、§5.4 包保护）
 - [RFC 9221 — An Unreliable Datagram Extension to QUIC](https://www.rfc-editor.org/rfc/rfc9221)
+- [RFC 9298 — Proxying UDP in HTTP（MASQUE）](https://www.rfc-editor.org/rfc/rfc9298)（QUIC 生态"藏在标准协议里"的代理路线，与 TUIC 的自定义 ALPN 相对）
 - [TUIC Protocol 官方仓库与 SPEC](https://github.com/tuic-protocol/tuic)
 - [quinn 文档](https://docs.rs/quinn)（注意 `Connection::export_keying_material`、`send_datagram` 这两个 TUIC 用的冷门 API）
 - 拥塞控制进阶：[BBR 论文](https://research.google/pubs/pub45646/) 与 quinn 的 `congestion` 模块
