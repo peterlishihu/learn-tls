@@ -58,24 +58,21 @@ fn show_record_format() {
     println!("  0x0303 = TLS 1.2");
     println!("  0x0304 = TLS 1.3");
 
-    println!("\n=== TLS 1.2 Record Structure (MAC-then-Encrypt) ===\n");
+    println!("\n=== TLS 1.2 Record Structure (CBC suites: MAC-then-Encrypt) ===\n");
     println!("┌────────────────────────────────────────────────────┐");
-    println!("│ Header (5 bytes)                                   │");
+    println!("│ Header (5 bytes, NOT encrypted/MACed)              │");
+    println!("│   Content Type (1) │ Version (2) │ Length (2)      │");
     println!("├────────────────────────────────────────────────────┤");
-    println!("│ Content Type (1 byte)                              │");
-    println!("│ Version (2 bytes)                                  │");
-    println!("│ Length (2 bytes)                                   │");
+    println!("│ Explicit IV (block-size bytes, TLS 1.1+)           │");
     println!("├────────────────────────────────────────────────────┤");
-    println!("│ Fragment                                           │");
-    println!("│   - Plaintext data                                 │");
-    println!("│   - Max 2^14 bytes                                 │");
-    println!("├────────────────────────────────────────────────────┤");
-    println!("│ MAC (16-32 bytes, HMAC-SHA256/SHA384)              │");
-    println!("├────────────────────────────────────────────────────┤");
-    println!("│ Padding (0-255 bytes, for block ciphers)           │");
-    println!("├────────────────────────────────────────────────────┤");
-    println!("│ Encryption (AES-CBC or AES-GCM)                    │");
+    println!("│ Encrypted region:                                  │");
+    println!("│   Fragment (plaintext, max 2^14 bytes)             │");
+    println!("│   MAC (20/32/48 B: HMAC-SHA1/SHA256/SHA384)        │");
+    println!("│   Padding (each byte = padding_length value)       │");
+    println!("│   padding_length (1 byte)                          │");
     println!("└────────────────────────────────────────────────────┘");
+    println!("  (TLS 1.2 GCM instead: explicit_nonce(8) + ciphertext");
+    println!("   + tag(16); no MAC field, no padding)");
 
     println!("\n=== TLS 1.3 Record Structure (AEAD) ===\n");
     println!("┌────────────────────────────────────────────────────┐");
@@ -142,14 +139,15 @@ fn print_all_info() {
     println!("    - Padding oracle attacks possible");
     println!("    - Must decrypt to verify MAC\n");
 
-    println!("TLS 1.3 (AEAD - Authenticated Encryption):");
-    println!("  1. Encrypt plaintext using AEAD");
-    println!("  2. Authentication tag included automatically");
-    println!("  3. No padding needed");
+    println!("TLS 1.3 (AEAD: encryption and authentication in one primitive):");
+    println!("  1. inner = content || real_content_type(1B) || padding");
+    println!("  2. nonce = static_IV XOR seq (nothing sent on wire)");
+    println!("  3. AAD = 5-byte record header (type=0x17, 0x0303, len)");
+    println!("  4. ciphertext = AEAD-encrypt(inner) + 16-byte tag");
     println!("  Advantages:");
-    println!("    ✓ No padding oracle attacks");
-    println!("    ✓ Single pass encryption+authentication");
-    println!("    ✓ More efficient\n");
+    println!("    ✓ No CBC padding oracle at all");
+    println!("    ✓ Tag verified before any plaintext is used");
+    println!("    ✓ Real content type hidden inside ciphertext\n");
 
     println!("=== Security Considerations ===\n");
 
